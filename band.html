@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Band</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .form-section {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+        }
+        
+        .radio-option input {
+            margin-right: 5px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .status-hadir {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .status-izin {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
+        .status-alpa {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .summary {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            gap: 15px;
+        }
+        
+        .summary-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .keterangan {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .notification {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .notification.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .notification.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .summary {
+                flex-direction: column;
+            }
+            
+            .summary-item {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Absensi Band</h1>
+            <p>Sistem pencatatan kehadiran anggota band dengan Firebase</p>
+        </header>
+        
+        <div id="notification" class="notification"></div>
+        
+        <section class="form-section">
+            <h2>Form Absensi</h2>
+            <form id="absensiForm">
+                <div class="form-group">
+                    <label for="nama">Nama</label>
+                    <input type="text" id="nama" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="kelas">Kelas</label>
+                    <input type="text" id="kelas" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="instrument">Posisi/Instrument</label>
+                    <select id="instrument" required>
+                        <option value="">Pilih Instrument</option>
+                        <option value="Vokal">Vokal</option>
+                        <option value="Gitar">Gitar</option>
+                        <option value="Bass">Bass</option>
+                        <option value="Drum">Drum</option>
+                        <option value="Keyboard">Keyboard</option>
+                        <option value="Pianis">Pianis</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Status Kehadiran</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="hadir" name="status" value="Hadir" checked>
+                            <label for="hadir">Hadir</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="izin" name="status" value="Izin">
+                            <label for="izin">Izin</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="alpa" name="status" value="Alpa">
+                            <label for="alpa">Alpa</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="keteranganGroup" style="display: none;">
+                    <label for="keterangan">Keterangan Izin</label>
+                    <textarea id="keterangan" placeholder="Masukkan alasan izin..."></textarea>
+                </div>
+                
+                <button type="submit" id="submitBtn">
+                    <span id="submitText">Simpan Absensi</span>
+                    <span id="submitLoading" class="loading" style="display: none;"></span>
+                </button>
+            </form>
+        </section>
+        
+        <section>
+            <h2>Data Absensi</h2>
+            <table id="tabelAbsensi">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Kelas</th>
+                        <th>Instrument</th>
+                        <th>Status</th>
+                        <th>Keterangan</th>
+                        <th>Tanggal</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelBody">
+                    <!-- Data akan diisi oleh JavaScript -->
+                </tbody>
+            </table>
+            
+            <div class="summary" id="summarySection">
+                <!-- Summary akan diisi oleh JavaScript -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Konfigurasi Firebase
+    const firebaseConfig = {
+            apiKey: "AIzaSyAhfvsSk1SLqggkelPKSqW4zAqlVRvNXzU",
+            authDomain: "band-17d44.firebaseapp.com",
+            projectId: "band-17d44",
+            storageBucket: "band-17d44.firebasestorage.app",
+            messagingSenderId: "891827243124",
+            appId: "1:891827243124:web:d8d59841fbddb103552921"
+        };
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let dataAbsensi = [];
+            
+            // Tampilkan data yang sudah ada
+            loadDataFromFirebase();
+            
+            // Tampilkan/sembunyikan field keterangan berdasarkan status
+            const statusRadios = document.querySelectorAll('input[name="status"]');
+            const keteranganGroup = document.getElementById('keteranganGroup');
+            
+            statusRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'Izin') {
+                        keteranganGroup.style.display = 'block';
+                    } else {
+                        keteranganGroup.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Handle form submission
+            document.getElementById('absensiForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const nama = document.getElementById('nama').value;
+                const kelas = document.getElementById('kelas').value;
+                const instrument = document.getElementById('instrument').value;
+                const status = document.querySelector('input[name="status"]:checked').value;
+                const keterangan = status === 'Izin' ? document.getElementById('keterangan').value : '';
+                const tanggal = new Date().toLocaleDateString('id-ID');
+                const timestamp = new Date();
+                
+                // Tampilkan loading
+                const submitBtn = document.getElementById('submitBtn');
+                const submitText = document.getElementById('submitText');
+                const submitLoading = document.getElementById('submitLoading');
+                
+                submitBtn.disabled = true;
+                submitText.textContent = 'Menyimpan...';
+                submitLoading.style.display = 'inline-block';
+                
+                // Simpan ke Firebase
+                saveToFirebase({
+                    nama,
+                    kelas,
+                    instrument,
+                    status,
+                    keterangan,
+                    tanggal,
+                    timestamp
+                });
+            });
+            
+            function saveToFirebase(data) {
+                db.collection('absensi').add(data)
+                    .then((docRef) => {
+                        console.log("Data berhasil disimpan dengan ID: ", docRef.id);
+                        showNotification('Absensi berhasil disimpan!', 'success');
+                        
+                        // Reset form
+                        document.getElementById('absensiForm').reset();
+                        keteranganGroup.style.display = 'none';
+                        document.getElementById('hadir').checked = true;
+                        
+                        // Update tampilan
+                        loadDataFromFirebase();
+                    })
+                    .catch((error) => {
+                        console.error("Error menyimpan data: ", error);
+                        showNotification('Gagal menyimpan absensi: ' + error.message, 'error');
+                    })
+                    .finally(() => {
+                        // Sembunyikan loading
+                        const submitBtn = document.getElementById('submitBtn');
+                        const submitText = document.getElementById('submitText');
+                        const submitLoading = document.getElementById('submitLoading');
+                        
+                        submitBtn.disabled = false;
+                        submitText.textContent = 'Simpan Absensi';
+                        submitLoading.style.display = 'none';
+                    });
+            }
+            
+            function loadDataFromFirebase() {
+                db.collection('absensi')
+                    .orderBy('timestamp', 'desc')
+                    .get()
+                    .then((querySnapshot) => {
+                        dataAbsensi = [];
+                        querySnapshot.forEach((doc) => {
+                            const data = doc.data();
+                            data.id = doc.id;
+                            dataAbsensi.push(data);
+                        });
+                        renderTabel();
+                        updateSummary();
+                    })
+                    .catch((error) => {
+                        console.error("Error mengambil data: ", error);
+                        showNotification('Gagal memuat data: ' + error.message, 'error');
+                    });
+            }
+            
+            function renderTabel() {
+                const tabelBody = document.getElementById('tabelBody');
+                tabelBody.innerHTML = '';
+                
+                if (dataAbsensi.length === 0) {
+                    tabelBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Belum ada data absensi</td></tr>';
+                    return;
+                }
+                
+                dataAbsensi.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    
+                    // Tentukan class status untuk styling
+                    let statusClass = '';
+                    if (item.status === 'Hadir') statusClass = 'status-hadir';
+                    else if (item.status === 'Izin') statusClass = 'status-izin';
+                    else if (item.status === 'Alpa') statusClass = 'status-alpa';
+                    
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${item.nama}</td>
+                        <td>${item.kelas}</td>
+                        <td>${item.instrument}</td>
+                        <td class="${statusClass}">${item.status}</td>
+                        <td>${item.keterangan || '-'}</td>
+                        <td>${item.tanggal}</td>
+                    `;
+                    
+                    tabelBody.appendChild(row);
+                });
+            }
+            
+            function updateSummary() {
+                const summarySection = document.getElementById('summarySection');
+                
+                if (dataAbsensi.length === 0) {
+                    summarySection.innerHTML = '<p>Belum ada data untuk ditampilkan</p>';
+                    return;
+                }
+                
+                // Hitung statistik per orang
+                const statistikPerOrang = {};
+                
+                dataAbsensi.forEach(item => {
+                    if (!statistikPerOrang[item.nama]) {
+                        statistikPerOrang[item.nama] = {
+                            nama: item.nama,
+                            hadir: 0,
+                            izin: 0,
+                            alpa: 0
+                        };
+                    }
+                    
+                    if (item.status === 'Hadir') statistikPerOrang[item.nama].hadir++;
+                    else if (item.status === 'Izin') statistikPerOrang[item.nama].izin++;
+                    else if (item.status === 'Alpa') statistikPerOrang[item.nama].alpa++;
+                });
+                
+                // Buat elemen summary
+                let summaryHTML = '';
+                
+                for (const nama in statistikPerOrang) {
+                    const stat = statistikPerOrang[nama];
+                    summaryHTML += `
+                        <div class="summary-item">
+                            <div class="summary-value">${stat.nama}</div>
+                            <div class="summary-label">Hadir: ${stat.hadir}</div>
+                            <div class="summary-label">Izin: ${stat.izin}</div>
+                            <div class="summary-label">Alpa: ${stat.alpa}</div>
+                        </div>
+                    `;
+                }
+                
+                summarySection.innerHTML = summaryHTML;
+            }
+            
+            function showNotification(message, type) {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.style.display = 'block';
+                
+                // Sembunyikan notifikasi setelah 5 detik
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>
